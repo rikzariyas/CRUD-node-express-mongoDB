@@ -1,98 +1,108 @@
-import User from "../models/User.js"
+import { ObjectId } from "mongodb";
+import collection from "../config/collection.js";
+import { getDB } from "../config/db.js";
 
 // getting all users
-export const getAllUsers = async (req,res)=>{
-    console.log("getAllUsers is called")
-    try{
-        const users = await User.find().select("-password")
-        res.status(200).json({
-            status:"OK",
-            data : users
-        })
-    }
-    catch{
-        res.status(400).json({
-            status:"Error",
-            message: error.message
-        })
-    }
-}
+export const getAllUsers = async (req, res) => {
+  console.log("getAllUsers is called");
+  try {
+    const users = await getDB()
+      .collection(collection.USERS_COLLECTION)
+      .find({}, { project: { password: 0 } })
+      .toArray();
+    console.log("users", users);
+    res.status(200).json({
+      status: "OK",
+      data: users,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+};
 
 //update user
 
-export const nameUpdate = async (req, res) =>{
-    console.log("partial update called")
-    console.log("req.params.id>>>",req.params.id)
-    try{
-        const {userId}= req.params
-        const user = await User.findOne({userId})
-        if(! user){
-            throw new Error("user not found")
-        }
-        user.name= req.body.name
-        await user.save()
-        res.status(200).json({
-            status:"ok",
-            data: user
-        })
+export const nameUpdate = async (req, res) => {
+  console.log("partial update called");
+  console.log("req.params.id>>>", req.params.id);
+  try {
+    const { id } = req.params;
+    const user = await getDB()
+      .collection(collection.USERS_COLLECTION)
+      .updateOne({ _id: ObjectId }, { $set: { name: req.body.name } });
+    if (!user) {
+      throw new Error("user not found");
     }
-    catch(error){
-        res.status(400).json({
-            status:"Error",
-            message:error.message
-        })    
-    }
-}
+    res.status(200).json({
+      status: "ok",
+      data: user,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+};
 
 //update all
-export const replaceUser = async (req,res) =>{
-    console.log("replaceUser update")
-    console.log("req.params.id",req.params.id)
-    console.log("req.body",req.body)
+export const replaceUser = async (req, res) => {
+  console.log("replaceUser update");
+  console.log("req.params.id", req.params.id);
+  console.log("req.body", req.body);
 
-    try{
-        const {userId}= req.params
-        const user = await User.findOne({userId}).select("-password")
-        if(!user){
-            throw new Error ("user not found")
-        }
-        const result = await User.replaceOne({userId}, req.body)
-        console.log("result>>>>",result)
-        await user.save()
-
-        res.status(200).json({
-            status:"OK",
-            data: user
-        })
+  try {
+    const { id } = req.params;
+    const user = await getDB()
+      .collection(collection.USERS_COLLECTION)
+      .replaceOne(
+        { id: ObjectId},
+        {
+          name: req.body.name,
+          age: req.body.age,
+          address: req.body.address,
+          email: req.body.email,
+          password: req.body.password,
+        },
+      );
+    //   console.log("user>>>>",user)
+    if (!user) {
+      throw new Error("user not found");
     }
-    catch(error){
-        res.status(400).json({
-            status:"Error",
-            message:error.message
-        })
+    console.log("user>>>>", user);
 
-    }
-}
-
+    res.status(200).json({
+      status: "OK",
+      data: user,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Error",
+      message: error.message,
+    });
+  }
+};
 
 //delete
-export const deleteUser = async (req,res)=>{
-    try{
-    const {userId}= req.body
-    const user = await User.findOne({userId})
-    if(!user){
-        throw new Error ("user not found")
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await getDB().collection(collection.USERS_COLLECTION).deleteOne({ id: ObjectId });
+    if (!user) {
+      throw new Error("user not found");
     }
-    const result = await User.deleteOne({userId})
+    console.log("user",user)
     res.status(200).json({
-        status:"ok",
-        data: result
-    })
-}
-catch(error){
+      status: "ok",
+      data: user,
+    });
+  } catch (error) {
     res.status(400).json({
-        status:"error",
-        message: error.message
-    })
-}
-}
+      status: "error",
+      message: error.message,
+    });
+  }
+};

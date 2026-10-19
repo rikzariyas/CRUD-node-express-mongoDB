@@ -1,6 +1,8 @@
 import { v7 as uuidv7 } from "uuid";
 import bcrypt from "bcrypt";
-import User from "../models/User.js";
+import { getDB } from "../config/db.js";
+import collection from "../config/collection.js";
+
 
 export const userLogin = async (req, res) => {
   // console.log("hello from routes >>>")
@@ -35,14 +37,23 @@ export const registerUser = async (req, res) => {
     const userId = uuidv7();
     console.log(userId);    
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
+    const userData= {
       userId,
       name,
       age,
       address,
       email,
       password: hashedPassword,
-    });
+      createdAt:new Date(),
+      updatedAt:new Date()
+    };
+
+    // console.log("user",userData)
+    // console.log("database",getDB())
+
+    const result = await getDB().collection(collection.USERS_COLLECTION ).insertOne(userData)
+    console.log("result>>>",result)
+
     res.status(200).json({
       status: "ok",
       message: "successfully registered",
