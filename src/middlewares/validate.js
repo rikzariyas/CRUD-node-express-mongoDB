@@ -1,16 +1,37 @@
+// export const validate = (schema) => (req, res, next) => {
+//   const { error } = schema.validate(req.body, { abortEarly: false, allowUnknown: true });
+
+//   if (error) {
+//     // Clean and user-friendly messages
+//     const errors = error.details.map((detail) => {
+//       return detail.message.replace(/["]/g, ''); // remove extra quotes
+//     });
+
+//     // If only one error, show as single string; otherwise show list
+//     return res.status(400).json({
+//       error: errors.length === 1 ? errors[0] : errors
+//     });
+//   }
+
+//   next();
+// };
+
 export const validate = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body, { abortEarly: false, allowUnknown: true });
+  for (const key of ["params", "body"]) {
+    if (schema[key]) {
+      const { error, value } = schema[key].validate(req[key], {
+        abortEarly: false,
+      });
 
-  if (error) {
-    // Clean and user-friendly messages
-    const errors = error.details.map((detail) => {
-      return detail.message.replace(/["]/g, ''); // remove extra quotes
-    });
+      if (error) {
+        return res.status(400).json({
+          status: "Error",
+          message: error.details.map((d) => d.message),
+        });
+      }
 
-    // If only one error, show as single string; otherwise show list
-    return res.status(400).json({
-      error: errors.length === 1 ? errors[0] : errors
-    });
+      req[key] = value;
+    }
   }
 
   next();
