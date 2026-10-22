@@ -32,7 +32,7 @@ export const nameUpdate = async (req, res) => {
     const { id } = req.params;
     const user = await getDB()
       .collection(collection.USERS_COLLECTION)
-      .updateOne({ _id: ObjectId }, { $set: { name: req.body.name } });
+      .updateOne({ _id: new ObjectId(id) }, { $set: { name: req.body.name } });
     if (!user) {
       throw new Error("user not found");
     }
@@ -59,7 +59,7 @@ export const replaceUser = async (req, res) => {
     const user = await getDB()
       .collection(collection.USERS_COLLECTION)
       .replaceOne(
-        { id: ObjectId},
+        { _id: new ObjectId(id) },
         {
           name: req.body.name,
           age: req.body.age,
@@ -90,7 +90,7 @@ export const replaceUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await getDB().collection(collection.USERS_COLLECTION).deleteOne({ id: ObjectId });
+    const user = await getDB().collection(collection.USERS_COLLECTION).deleteOne({ _id: new ObjectId(id)  });
     if (!user) {
       throw new Error("user not found");
     }

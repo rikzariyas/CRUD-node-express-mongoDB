@@ -1,6 +1,9 @@
 import Joi from "joi";
 
-const id = Joi.string().guid().required();
+const id = Joi.string()
+  .hex()
+  .length(24)
+  .required();
 
 export const updateNameSchema = {
   params: Joi.object({
