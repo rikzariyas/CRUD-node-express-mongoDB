@@ -1,106 +1,172 @@
-# CRUD Node, Express, and MongoDB API
+# CRUD Node.js API
 
-A REST API for registering users and managing user records. It is built with Node.js, Express.js, and the official MongoDB Node.js driver, with bcrypt password hashing.
+A lightweight Express + MongoDB REST API for user registration, admin authentication, and CRUD operations.
+
+## Overview
+
+This project demonstrates a basic backend setup for managing users with:
+
+- Node.js and Express
+- MongoDB using the official MongoDB driver
+- JWT-based authentication
+- bcrypt password hashing
+- Joi validation
+- role-based access control for admin routes
 
 ## Features
 
-- User registration
-- Admin credential login
-- List users without exposing password hashes
-- Partially update user records
-- Replace user records
-- Delete user records
-- MongoDB integration using the official MongoDB driver
-- Health-check endpoint
-- CORS and Helmet middleware
-- Environment-based configuration
+- User registration with password hashing
+- User login with JWT token generation
+- Admin login validation against environment credentials
+- Fetch all users without exposing passwords
+- Update a user name with PATCH
+- Replace a user record with PUT
+- Delete a user by ID
+- Health check endpoint
+- CORS, Helmet, and request logging middleware
 
-## Requirements
+## Tech Stack
 
-- Node.js (ES modules supported)
-- npm
-- MongoDB running locally or a MongoDB connection URI
+- Node.js
+- Express.js
+- MongoDB
+- JWT
+- bcrypt
+- Joi
+- dotenv
+- CORS
+- Helmet
+- Morgan
 
-## Getting started
+## Project Structure
 
-### 1. Install dependencies
+```text
+CRUD-node-express-mongoDB/
+├── src/
+│   ├── config/
+│   │   ├── collection.js
+│   │   └── db.js
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   └── userController.js
+│   ├── middlewares/
+│   │   ├── authMiddleware.js
+│   │   └── validate.js
+│   ├── routes/
+│   │   ├── adminRoutes.js
+│   │   ├── authRoutes.js
+│   │   └── userRoutes.js
+│   ├── validators/
+│   │   ├── authValidators.js
+│   │   ├── userFieldValidators.js
+│   │   └── userValidators.js
+│   └── server.js
+├── .env.example
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
+```
+
+## Prerequisites
+
+Before running the project, make sure you have:
+
+- Node.js 18+ installed
+- npm installed
+- MongoDB running locally or a MongoDB Atlas connection string
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/CRUD-node-express-mongoDB.git
+cd CRUD-node-express-mongoDB
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-Ensure the official MongoDB driver is installed:
+## Environment Configuration
 
-```bash
-npm install mongodb
-```
+Create a `.env` file in the project root based on `.env.example`:
 
-### 2. Configure environment variables
-
-Copy `.env.example` to `.env` and update the values for your environment.
-
-```dotenv
-PORT=4200
+```env
+PORT=3000
 ADMIN_USERNAME=admin@example.com
-ADMIN_PASSWORD=replace-with-a-strong-password
+ADMIN_PASSWORD=your_secure_password
 MONGODB_URI=mongodb://localhost:27017
 DATABASE=CRUD1
+JWT_SECRET=your_jwt_secret
 ```
 
-- `PORT`: Port on which the Express server listens.
-- `ADMIN_USERNAME`: Configured admin username.
-- `ADMIN_PASSWORD`: Configured admin password.
-- `MONGODB_URI`: MongoDB server connection URI.
-- `DATABASE`: MongoDB database name.
+### Environment variables
 
-Keep `.env` private and never commit real credentials to version control.
+- `PORT`: Port used by the Express server
+- `ADMIN_USERNAME`: Admin username for admin login
+- `ADMIN_PASSWORD`: Admin password for admin login
+- `MONGODB_URI`: MongoDB connection URI
+- `DATABASE`: MongoDB database name
+- `JWT_SECRET`: Secret key used to sign JWTs
 
-### 3. Start the API
+## Running the API
 
-Start the development server:
+Start the app in development mode:
 
 ```bash
 npm run dev
 ```
 
-Start the server without nodemon:
+Or start it without nodemon:
 
 ```bash
 npm start
 ```
 
-The API listens on the configured port. If `PORT` is unset, the server uses port `3000`.
+The server runs on the configured `PORT` (default: `3000`).
 
 ## API Endpoints
 
-All request and response bodies use JSON unless noted otherwise.
+The project includes the following HTTP routes.
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/health` | Check server status |
-| `POST` | `/api/auth/register` | Register a user |
-| `POST` | `/api/auth/login` | Check configured admin credentials |
-| `GET` | `/api/users` | Retrieve all users without password hashes |
-| `PATCH` | `/api/users/:id` | Partially update a user's name |
-| `PUT` | `/api/users/:id` | Replace a user record |
-| `DELETE` | `/api/users/:id` | Delete a user |
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Check whether the server is running | No |
+| `POST` | `/api/auth/register` | Register a new user | No |
+| `POST` | `/api/admin/login` | Admin login using env credentials | No |
+| `POST` | `/api/users/login` | User login using email and password | No |
+| `GET` | `/api/admin/users` | List all users without password hashes | Admin only |
+| `PATCH` | `/api/users/:id` | Update a user's name | Logged-in user |
+| `PUT` | `/api/users/:id` | Replace a user's data | Logged-in user |
+| `DELETE` | `/api/admin/:id` | Delete a user by ID | Admin only |
 
-Ensure that the route parameter names and controller logic match your actual implementation.
-
-## Example Requests
-
-### Health check
+### 1) Health check
 
 ```http
 GET /health
 ```
 
-### Register a user
+Response example:
+
+```json
+{
+  "status": "OK",
+  "message": "The server is running"
+}
+```
+
+### 2) Register user
 
 ```http
 POST /api/auth/register
 Content-Type: application/json
 ```
+
+Request body:
 
 ```json
 {
@@ -108,46 +174,108 @@ Content-Type: application/json
   "age": 30,
   "email": "jane@example.com",
   "address": "123 Main Street",
-  "password": "choose-a-password"
+  "password": "Abcdef1@",
+  "role": "user"
 }
 ```
 
-Passwords should be hashed using bcrypt before being stored in MongoDB.
+Validation rules:
 
-The accepted fields depend on the validation implemented in your registration controller.
+- `name`: letters and spaces only, min 3, max 50
+- `email`: valid email format
+- `address`: optional, minimum 5 characters
+- `password`: must include uppercase, lowercase, number, and special character
+- `age`: optional, between 10 and 80
+- `role`: optional, either `admin` or `user`
 
-### Admin login
+### 3) Admin login
 
 ```http
-POST /api/auth/login
+POST /api/admin/login
 Content-Type: application/json
 ```
+
+Request body:
 
 ```json
 {
   "username": "admin@example.com",
-  "password": "replace-with-a-strong-password"
+  "password": "YourSecurePassword123!"
 }
 ```
 
-The credentials are compared against `ADMIN_USERNAME` and `ADMIN_PASSWORD` configured in `.env`.
+This checks against the values set in `.env`:
 
-This endpoint checks the configured admin credentials. It does not automatically authenticate registered users or issue an authentication token.
-
-### List users
-
-```http
-GET /api/users
+```env
+ADMIN_USERNAME=admin@example.com
+ADMIN_PASSWORD=YourSecurePassword123!
 ```
 
-Returns the user records while excluding the `password` field from the results.
-
-### Partially update a user
+### 4) User login
 
 ```http
-PATCH /api/users/<user-id>
+POST /api/users/login
 Content-Type: application/json
 ```
+
+Request body:
+
+```json
+{
+  "email": "jane@example.com",
+  "password": "Abcdef1@"
+}
+```
+
+Successful response:
+
+```json
+{
+  "status": "OK",
+  "message": "login successfully",
+  "token": "<jwt-token>"
+}
+```
+
+### 5) Get all users
+
+```http
+GET /api/admin/users
+Authorization: Bearer <token>
+```
+
+Returns all users except the password field.
+
+Example response:
+
+```json
+{
+  "status": "OK",
+  "data": [
+    {
+      "_id": "64f2a...",
+      "userId": "uuid",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "age": 30,
+      "address": "123 Main Street",
+      "role": "user",
+      "createdAt": "2026-10-23T00:00:00.000Z",
+      "updatedAt": "2026-10-23T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### 6) Update user name
+
+```http
+PATCH /api/users/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+Request body:
 
 ```json
 {
@@ -155,98 +283,76 @@ Content-Type: application/json
 }
 ```
 
-Updates only the specified fields supported by the controller. The identifier may be a custom `userId` or MongoDB's `_id`, depending on the query used in your implementation.
-
-### Replace a user
+### 7) Replace user
 
 ```http
-PUT /api/users/<user-id>
+PUT /api/users/:id
+Authorization: Bearer <token>
 Content-Type: application/json
 ```
+
+Request body:
 
 ```json
 {
   "name": "Jane Smith",
   "age": 31,
   "email": "jane.smith@example.com",
-  "address": "456 New Street"
+  "address": "456 New Street",
+  "password": "NewPassword1@"
 }
 ```
 
-Replaces the existing document's fields with the supplied fields, except for MongoDB's immutable `_id`. Include all fields you intend to retain.
-
-### Delete a user
+### 8) Delete user
 
 ```http
-DELETE /api/users/<user-id>
+DELETE /api/admin/:id
+Authorization: Bearer <token>
 ```
 
-Deletes the specified user. The identifier location—URL parameter or request body—must match your controller implementation.
+This route deletes a user from the database by MongoDB `_id`.
 
-## Technology Stack
+## Example JWT Usage
 
-- **Node.js** — JavaScript runtime
-- **Express.js** — Web framework and REST API routing
-- **MongoDB** — NoSQL database
-- **MongoDB Node.js Driver** — Direct database queries and CRUD operations
-- **bcrypt** — Password hashing
-- **dotenv** — Environment variable configuration
-- **CORS** — Cross-origin request handling
-- **Helmet** — HTTP security headers
+After a successful login, send the token in the `Authorization` header:
 
-## Project Structure
-
-```text
-src/
-├── config/
-│   └── db.js              # MongoDB connection
-├── controllers/
-│   ├── authController.js  # Authentication handlers
-│   └── userController.js  # User CRUD operations
-├── routes/
-│   ├── authRoutes.js      # Authentication routes
-│   └── userRoutes.js      # User routes
-└── server.js              # Application setup and startup
+```http
+Authorization: Bearer <jwt-token>
 ```
 
-The exact filenames may differ depending on your implementation.
+## Notes
 
-## MongoDB Usage
+- `verifyToken` checks the JWT in the request header.
+- `verifyAdmin` only allows users with `role === "Admin"` to access admin routes.
+- `verifyUser` allows any valid logged-in user to access user routes.
 
-This project uses the official MongoDB Node.js driver directly, without Mongoose models or schemas.
+## Authentication Behavior
 
-Example query:
+- `verifyToken` validates the JWT from the `Authorization` header.
+- `verifyAdmin` ensures that only users with `role === "Admin"` can access admin routes.
+- `verifyUser` allows any valid logged-in user to access user-level routes.
 
-```javascript
-const users = await db
-  .collection("users")
-  .find({}, { projection: { password: 0 } })
-  .toArray();
-```
+## Validation
 
-Example update:
+The project uses Joi for request validation, including:
 
-```javascript
-await db.collection("users").updateOne(
-  { _id: new ObjectId(id) },
-  { $set: { name: "Jane Smith" } }
-);
-```
-
-Example replacement:
-
-```javascript
-await db.collection("users").replaceOne(
-  { _id: new ObjectId(id) },
-  {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    address: "456 New Street"
-  }
-);
-```
+- ID format checks
+- name validation
+- email validation
+- password validation
+- age range validation
+- address length validation
 
 ## Security Notes
+
+- Passwords are hashed with bcrypt before storage.
+- JWT secrets should be stored in a secure `.env` file and never committed to source control.
+- Do not expose `.env` in public repositories.
+- Keep MongoDB access restricted and use strong credentials in production.
+
+## License
+
+This project is licensed under the ISC License.
 
 - Never commit `.env` or expose database credentials.
 - Hash passwords before storing them.

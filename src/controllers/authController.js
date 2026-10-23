@@ -2,18 +2,12 @@ import { v7 as uuidv7 } from "uuid";
 import bcrypt from "bcrypt";
 import { getDB } from "../config/db.js";
 import collection from "../config/collection.js";
-import jwt from "jsonwebtoken"
-
+import jwt from "jsonwebtoken";
 
 export const adminLogin = async (req, res) => {
-  // console.log("hello from routes >>>")
   try {
     const { username, password } = req.body;
-    console.log(username, password);
-    if (
-      username === process.env.ADMIN_USERNAME &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
+    if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
       return res.status(200).json({
         status: "OK",
         message: "Login successfully",
@@ -31,14 +25,13 @@ export const adminLogin = async (req, res) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, age, email, address, password,role } = req.body;
+    const { name, age, email, address, password, role } = req.body;
     if (!name || !email || !password) {
       throw new Error("give valid name,password, email ");
     }
     const userId = uuidv7();
-    console.log(userId);    
     const hashedPassword = await bcrypt.hash(password, 10);
-    const userData= {
+    const userData = {
       userId,
       name,
       age,
@@ -46,21 +39,18 @@ export const registerUser = async (req, res) => {
       email,
       role,
       password: hashedPassword,
-      createdAt:new Date(),
-      updatedAt:new Date()
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    // console.log("user",userData)
-    // console.log("database",getDB())
-
-    const result = await getDB().collection(collection.USERS_COLLECTION ).insertOne(userData)
-    console.log("result>>>",result)
+    const result = await getDB().collection(collection.USERS_COLLECTION).insertOne(userData);
+    console.log("result>>>", result);
 
     res.status(200).json({
       status: "ok",
       message: "successfully registered",
     });
-  } catch {
+  } catch (error) {
     res.status(400).json({
       status: "error",
       message: error.message,
@@ -68,28 +58,17 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 export const userLogin = async (req, res) => {
-  console.log("user login >>>>>>>>>>>");
-  console.log("req.body>>>>", req.body);
-    console.log("Request body:", req.body);
-  console.log("Email:", req.body?.email);
-  console.log("Password:", req.body?.password);
-
   try {
     const { email, password } = req.body;
-
     const user = await getDB().collection(collection.USERS_COLLECTION).findOne({ email });
-    console.log("user>>>", user);
+
     if (!user) {
       throw new Error("user not found");
     }
 
-    const isPasswordMatch = await bcrypt.compare(
-      req.body.password,
-      user.password,
-    );
-    console.log("isPasswordMatch>>>", isPasswordMatch);
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+
     if (!isPasswordMatch) {
       throw new Error("invalid password");
     }

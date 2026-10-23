@@ -1,6 +1,6 @@
 let collection = {
-    USERS_COLLECTION : "users",
-    ADMIN_COLLECTION : "admin"
-}
+  USERS_COLLECTION: "users",
+  ADMIN_COLLECTION: "admin",
+};
 
-export default collection
+export default collection;

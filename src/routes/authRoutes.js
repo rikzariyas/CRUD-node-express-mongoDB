@@ -1,14 +1,10 @@
-import express from "express"
-import { registerUser, adminLogin, userLogin} from "../controllers/authController.js"
-import { getAllUsers } from "../controllers/userController.js";
+import express from "express";
 import { validate } from "../middlewares/validate.js";
 import { registerValidation } from "../validators/authValidators.js";
+import { registerUser } from "../controllers/authController.js";
 
-const authRoutes = express.Router({mergeParams:true})
+const authRoutes = express.Router({ mergeParams: true });
 
+authRoutes.post("/register", validate(registerValidation), registerUser);
 
-// authRoutes.post("/login", adminLogin)
-authRoutes.post("/login", userLogin)
-authRoutes.post("/register",validate(registerValidation),registerUser)
-
-export default authRoutes
+export default authRoutes;
