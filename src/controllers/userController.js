@@ -9,7 +9,6 @@ export const getAllUsers = async (req, res) => {
       .collection(collection.USERS_COLLECTION)
       .find({}, { project: { password: 0 } })
       .toArray();
-    console.log("users", users);
     res.status(200).json({
       status: "OK",
       data: users,
