@@ -22,6 +22,7 @@ export const adminLogin = async (req, res) => {
 
 export const registerUser = async (req, res) => {
   const { name, age, email, address, password } = req.body;
+  const normalizedEmail = String(email).trim().toLowerCase();
   const now = new Date();
   await getDB()
     .collection(collection.USERS_COLLECTION)
@@ -30,7 +31,7 @@ export const registerUser = async (req, res) => {
       name,
       age,
       address,
-      email,
+      email: normalizedEmail,
       role: "user",
       password: await bcrypt.hash(password, 12),
       createdAt: now,
@@ -42,7 +43,8 @@ export const registerUser = async (req, res) => {
 
 export const userLogin = async (req, res) => {
   const { email, password } = req.body;
-  const user = await getDB().collection(collection.USERS_COLLECTION).findOne({ email });
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const user = await getDB().collection(collection.USERS_COLLECTION).findOne({ email: normalizedEmail });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw httpError("Invalid email or password", 401);

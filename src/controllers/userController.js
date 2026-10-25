@@ -27,6 +27,7 @@ export const nameUpdate = async (req, res) => {
 
 export const replaceUser = async (req, res) => {
   const { name, age, address, email, password } = req.body;
+  const normalizedEmail = String(email).trim().toLowerCase();
   const result = await getDB()
     .collection(collection.USERS_COLLECTION)
     .updateOne(userFilter(req, req.params.id), {
@@ -34,7 +35,7 @@ export const replaceUser = async (req, res) => {
         name,
         age,
         address,
-        email,
+        email: normalizedEmail,
         password: await bcrypt.hash(password, 12),
         updatedAt: new Date(),
       },

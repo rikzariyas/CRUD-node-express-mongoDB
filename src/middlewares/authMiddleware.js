@@ -7,7 +7,7 @@ import collection from "../config/collection.js";
 export const verifyToken = (req, res, next) => {
   const authorization = req.headers.authorization?.split(" ") ?? [];
   if (authorization.length !== 2 || authorization[0] !== "Bearer" || !authorization[1]) {
-    return next(httpError("A Bearer token is required", 401));
+    return next(httpError("Authorization header is required", 401));
   }
   try {
     const decoded = jwt.verify(authorization[1], process.env.JWT_SECRET);

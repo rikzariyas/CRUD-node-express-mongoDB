@@ -10,22 +10,14 @@ Express and MongoDB REST API for user registration, authentication, and CRUD ope
 
 ```env
 PORT=3000
-ADMIN_USERNAME=admin@example.com
-ADMIN_PASSWORD=use_a_strong_password
 MONGODB_URI=mongodb://localhost:27017
 DATABASE=CRUD1
 JWT_SECRET=use_a_long_random_secret
 ```
 
-4. Create or update the single admin account from the environment:
+4. Start the API with `npm run dev` during development or `npm start` otherwise.
 
-```bash
-npm run seed:admin
-```
-
-Admin accounts are only created by this seed command. Public registration always creates a regular user.
-
-Start the API with `npm run dev` during development or `npm start` otherwise.
+Public registration always creates a regular user. Admin login is only supported if an admin document exists in the database; create it manually when needed.
 
 ## Endpoints
 
@@ -34,7 +26,7 @@ Start the API with `npm run dev` during development or `npm start` otherwise.
 | `GET`    | `/health`              | Public | Health check                         |
 | `POST`   | `/api/auth/register`   | Public | Register a regular user              |
 | `POST`   | `/api/users/login`     | Public | Log in as a user                     |
-| `POST`   | `/api/admin/login`     | Public | Log in as the seeded admin           |
+| `POST`   | `/api/admin/login`     | Public | Log in as an admin user              |
 | `GET`    | `/api/admin/users`     | Admin  | List users without password hashes   |
 | `PUT`    | `/api/admin/users/:id` | Admin  | Replace a user's profile             |
 | `DELETE` | `/api/admin/users/:id` | Admin  | Delete a user                        |
@@ -43,9 +35,7 @@ Start the API with `npm run dev` during development or `npm start` otherwise.
 
 For protected endpoints, send the token returned by login:
 
-```http
-Authorization: Bearer <jwt-token>
-```
+Authorization: Bearer <token>
 
 Registration accepts `name`, `email`, and `password`; `age` and `address` are optional. Age must be a whole number from 10 to 80. Supplied addresses must contain 5 to 300 non-whitespace characters. Passwords are hashed before storage, and email addresses must be unique.
 
