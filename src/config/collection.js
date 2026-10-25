@@ -1,4 +1,4 @@
-let collection = {
+const collection = {
   USERS_COLLECTION: "users",
   ADMIN_COLLECTION: "admin",
 };

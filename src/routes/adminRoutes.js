@@ -4,12 +4,13 @@ import { deleteUser, getAllUsers, replaceUser } from "../controllers/userControl
 import { validate } from "../middlewares/validate.js";
 import { deleteUserSchema, replaceUserSchema } from "../validators/userValidators.js";
 import { adminLogin } from "../controllers/authController.js";
+import { adminLoginValidation } from "../validators/authValidators.js";
 
-const adminRoutes = express.Router({ mergeParams: true });
+const adminRoutes = express.Router();
 
-adminRoutes.post("/login", adminLogin);
+adminRoutes.post("/login", validate(adminLoginValidation), adminLogin);
 adminRoutes.get("/users", verifyAdmin, getAllUsers);
-adminRoutes.put("/:id", verifyAdmin, validate(replaceUserSchema), replaceUser);
-adminRoutes.delete("/:id", verifyAdmin, validate(deleteUserSchema), deleteUser);
+adminRoutes.put("/users/:id", verifyAdmin, validate(replaceUserSchema), replaceUser);
+adminRoutes.delete("/users/:id", verifyAdmin, validate(deleteUserSchema), deleteUser);
 
 export default adminRoutes;

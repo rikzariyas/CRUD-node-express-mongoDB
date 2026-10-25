@@ -4,13 +4,18 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 
-import { getDB, connectDB } from "./config/db.js";
+import { connectDB } from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import { errorHandler, httpError } from "./middlewares/errorHandler.js";
 
 dotenv.config();
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET must be configured");
+}
+
 await connectDB();
 
 const app = express();
@@ -29,10 +34,12 @@ app.get("/health", (req, res) => {
   });
 });
 
-//routes
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
+
+app.use((req, res, next) => next(httpError("Route not found", 404)));
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

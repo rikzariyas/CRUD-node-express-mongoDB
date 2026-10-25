@@ -18,15 +18,15 @@ export const replaceUserSchema = {
   }),
   body: Joi.object({
     name: nameValidation,
-    age: Joi.number().integer().min(1).max(150).required(),
-    email: Joi.string().trim().email().required(),
-    address: Joi.string().trim().min(1).max(300).required(),
+    age: Joi.number().integer().min(10).max(80).required(),
+    email: Joi.string().trim().lowercase().email().required(),
+    address: Joi.string().trim().min(5).max(300).required(),
     password: passwordValidation,
   }),
 };
 
 export const deleteUserSchema = {
-  body: Joi.object({
+  params: Joi.object({
     id,
   }),
 };

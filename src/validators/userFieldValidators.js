@@ -13,6 +13,7 @@ export const nameValidation = Joi.string()
   });
 
 export const passwordValidation = Joi.string()
+  .max(72)
   .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/)
   .required()
   .messages({

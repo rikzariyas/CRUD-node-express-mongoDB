@@ -1,102 +1,61 @@
 import { ObjectId } from "mongodb";
+import bcrypt from "bcrypt";
 import collection from "../config/collection.js";
 import { getDB } from "../config/db.js";
+import { httpError } from "../middlewares/errorHandler.js";
 
-// getting all users
 export const getAllUsers = async (req, res) => {
-  try {
-    const users = await getDB()
-      .collection(collection.USERS_COLLECTION)
-      .find({}, { project: { password: 0 } })
-      .toArray();
-    res.status(200).json({
-      status: "OK",
-      data: users,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "Error",
-      message: error.message,
-    });
-  }
+  const users = await getDB()
+    .collection(collection.USERS_COLLECTION)
+    .find({}, { projection: { password: 0 } })
+    .toArray();
+  res.status(200).json({ status: "OK", data: users });
 };
-
-//update user
 
 export const nameUpdate = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await getDB()
-      .collection(collection.USERS_COLLECTION)
-      .updateOne({ _id: new ObjectId(id) }, { $set: { name: req.body.name } });
-    if (!user) {
-      throw new Error("user not found");
-    }
-    res.status(200).json({
-      status: "ok",
-      data: user,
+  const result = await getDB()
+    .collection(collection.USERS_COLLECTION)
+    .updateOne(userFilter(req, req.params.id), {
+      $set: { name: req.body.name, updatedAt: new Date() },
     });
-  } catch (error) {
-    res.status(400).json({
-      status: "Error",
-      message: error.message,
-    });
+  if (!result.matchedCount) {
+    throw httpError("User not found", 404);
   }
+
+  res.status(200).json({ status: "OK", data: result });
 };
 
-//update all
 export const replaceUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await getDB()
-      .collection(collection.USERS_COLLECTION)
-      .updateOne(
-        { _id: new ObjectId(id) },
-        {
-          $set: {
-            name: req.body.name,
-            age: req.body.age,
-            address: req.body.address,
-            email: req.body.email,
-            password: req.body.password,
-            updatedAt: new Date(),
-          },
-        },
-      );
-    if (!user) {
-      throw new Error("user not found");
-    }
-
-    res.status(200).json({
-      status: "OK",
-      data: user,
+  const { name, age, address, email, password } = req.body;
+  const result = await getDB()
+    .collection(collection.USERS_COLLECTION)
+    .updateOne(userFilter(req, req.params.id), {
+      $set: {
+        name,
+        age,
+        address,
+        email,
+        password: await bcrypt.hash(password, 12),
+        updatedAt: new Date(),
+      },
     });
-  } catch (error) {
-    res.status(400).json({
-      status: "Error",
-      message: error.message,
-    });
+  if (!result.matchedCount) {
+    throw httpError("User not found", 404);
   }
+
+  res.status(200).json({ status: "OK", data: result });
 };
 
-//delete
 export const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = await getDB()
-      .collection(collection.USERS_COLLECTION)
-      .deleteOne({ _id: new ObjectId(id) });
-    if (!user) {
-      throw new Error("user not found");
-    }
-    res.status(200).json({
-      status: "ok",
-      data: user,
-    });
-  } catch (error) {
-    res.status(400).json({
-      status: "error",
-      message: error.message,
-    });
+  const result = await getDB().collection(collection.USERS_COLLECTION).deleteOne(userFilter(req, req.params.id));
+  if (!result.deletedCount) {
+    throw httpError("User not found", 404);
   }
+
+  res.status(200).json({ status: "OK", data: result });
+};
+
+const userFilter = (req, id) => {
+  const filter = { _id: new ObjectId(id) };
+  return req.user.role === "Admin" ? filter : { ...filter, userId: req.user.id };
 };
