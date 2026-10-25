@@ -24,7 +24,7 @@ export const registerUser = async (req, res) => {
   const { name, age, email, address, password } = req.body;
   const normalizedEmail = String(email).trim().toLowerCase();
   const now = new Date();
-  await getDB()
+  const result = await getDB()
     .collection(collection.USERS_COLLECTION)
     .insertOne({
       userId: uuidv7(),
@@ -38,13 +38,15 @@ export const registerUser = async (req, res) => {
       updatedAt: now,
     });
 
-  res.status(201).json({ status: "OK", message: "User registered successfully" });
+  res.status(201).json({ status: "OK", message: "User registered successfully", id: result.insertedId.toString() });
 };
 
 export const userLogin = async (req, res) => {
   const { email, password } = req.body;
   const normalizedEmail = String(email).trim().toLowerCase();
-  const user = await getDB().collection(collection.USERS_COLLECTION).findOne({ email: normalizedEmail });
+  const user = await getDB()
+    .collection(collection.USERS_COLLECTION)
+    .findOne({ email: normalizedEmail }, { collation: { locale: "en", strength: 2 } });
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw httpError("Invalid email or password", 401);
@@ -56,5 +58,5 @@ export const userLogin = async (req, res) => {
     { expiresIn: "1d" },
   );
 
-  res.status(200).json({ status: "OK", message: "Login successful", token });
+  res.status(200).json({ status: "OK", message: "Login successful", token, id: user._id.toString() });
 };
