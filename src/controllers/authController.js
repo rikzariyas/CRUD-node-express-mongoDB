@@ -6,20 +6,20 @@ import { v7 as uuidv7 } from "uuid";
 import { httpError } from "../middlewares/errorHandler.js";
 
 export const adminLogin = async (req, res) => {
+  const configuredUsername = process.env.ADMIN_USERNAME?.trim().toLowerCase();
+  const configuredPassword = process.env.ADMIN_PASSWORD;
   const { username, password } = req.body;
-  const admin = await getDB().collection(collection.ADMIN_COLLECTION).findOne({ username, _id: "primary" });
 
-  if (!admin || !(await bcrypt.compare(password, admin.password))) {
+  if (username !== configuredUsername || password !== configuredPassword) {
     throw httpError("Invalid username or password", 401);
   }
 
-  const token = jwt.sign({ id: admin._id, username: admin.username, role: "Admin" }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ id: "primary", username: configuredUsername, role: "Admin" }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 
   res.status(200).json({ status: "OK", message: "Login successful", token });
 };
-
 export const registerUser = async (req, res) => {
   const { name, age, email, address, password } = req.body;
   const normalizedEmail = String(email).trim().toLowerCase();

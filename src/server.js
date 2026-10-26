@@ -15,6 +15,9 @@ dotenv.config();
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET must be configured");
 }
+if (!process.env.ADMIN_USERNAME?.trim() || !process.env.ADMIN_PASSWORD) {
+  throw new Error("ADMIN_USERNAME and ADMIN_PASSWORD must be configured");
+}
 
 await connectDB();
 

@@ -10,6 +10,8 @@ Express and MongoDB REST API for user registration, authentication, and CRUD ope
 
 ```env
 PORT=3000
+ADMIN_USERNAME=admin@example.com
+ADMIN_PASSWORD=use_a_strong_password
 MONGODB_URI=mongodb://localhost:27017
 DATABASE=CRUD1
 JWT_SECRET=use_a_long_random_secret
@@ -17,7 +19,7 @@ JWT_SECRET=use_a_long_random_secret
 
 4. Start the API with `npm run dev` during development or `npm start` otherwise.
 
-Public registration always creates a regular user. Admin login requires an admin document in the `admin` collection with `_id: "primary"`, a lowercase username, and a bcrypt-hashed password. Admin seeding is not included. To provision an admin manually, generate a hash with `node --input-type=module -e "import bcrypt from 'bcrypt'; console.log(await bcrypt.hash('ReplaceWithStrongPassword', 12))"`, then insert `{ _id: "primary", username: "admin@example.com", password: "<generated-hash>", role: "Admin" }` into the `admin` collection.
+Public registration always creates a regular user. Admin login uses `ADMIN_USERNAME` and `ADMIN_PASSWORD` from `.env`; successful login returns a one-day JWT for admin-only endpoints. No admin database document or seed command is required.
 
 ## Endpoints
 
